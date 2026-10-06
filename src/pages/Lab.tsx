@@ -19,7 +19,7 @@ export function Lab() {
   const completion = useMemo(() => Math.round((checked.length / steps.length) * 100), [checked]);
 
   const toggleStep = (index: number) => {
-    setChecked((current) => current.includes(index) ? current.filter((item) => item !== index) : [...current, index]);
+    setChecked((current: number[]) => current.includes(index) ? current.filter((item: number) => item !== index) : [...current, index]);
   };
 
   return (
@@ -56,11 +56,11 @@ export function Lab() {
       <div className="form-row">
         <label>
           Massa inicial (g)
-          <input inputMode="decimal" value={a} onChange={(e) => setA(e.target.value)} />
+          <input inputMode="decimal" value={a} onChange={(e: any) => setA(e.target.value)} />
         </label>
         <label>
           Massa final (g)
-          <input inputMode="decimal" value={b} onChange={(e) => setB(e.target.value)} />
+          <input inputMode="decimal" value={b} onChange={(e: any) => setB(e.target.value)} />
         </label>
       </div>
 

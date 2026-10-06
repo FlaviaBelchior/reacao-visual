@@ -32,7 +32,7 @@ export function Glossary() {
         aria-label="Pesquisar no glossário"
         placeholder="Pesquisar termo científico"
         value={q}
-        onChange={(e) => setQ(e.target.value)}
+        onChange={(e: any) => setQ(e.target.value)}
       />
 
       <div className="glossary-list">

@@ -15,13 +15,13 @@ const clues = [
 export function Detective() {
   const [selected, setSelected] = useState<string[]>([]);
 
-  const toggle = (id: string) => setSelected((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
+  const toggle = (id: string) => setSelected((current: string[]) => current.includes(id) ? current.filter((item: string) => item !== id) : [...current, id]);
 
   const result = useMemo(() => {
-    const right = clues.filter((c) => c.type === 'evidence').map((c) => c.id);
-    const rightHits = selected.filter((item) => right.includes(item)).length;
-    const wrongHits = selected.filter((item) => !right.includes(item)).length;
-    return { rightHits, wrongHits, complete: rightHits === right.length && wrongHits === 0 };
+    const right = new Set<string>(clues.filter((c) => c.type === 'evidence').map((c) => c.id));
+    const rightHits = selected.filter((item: string) => right.has(item)).length;
+    const wrongHits = selected.filter((item: string) => !right.has(item)).length;
+    return { rightHits, wrongHits, complete: rightHits === right.size && wrongHits === 0 };
   }, [selected]);
 
   return (

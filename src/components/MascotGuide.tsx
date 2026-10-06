@@ -50,14 +50,14 @@ export function MascotGuide({
                 <button
                   type="button"
                   className="control-button"
-                  onClick={() => setCurrentStep((s) => (s === 0 ? steps.length - 1 : s - 1))}
+                  onClick={() => setCurrentStep((s: number) => (s === 0 ? steps.length - 1 : s - 1))}
                 >
                   Anterior
                 </button>
                 <button
                   type="button"
                   className="control-button"
-                  onClick={() => setCurrentStep((s) => (s + 1) % steps.length)}
+                  onClick={() => setCurrentStep((s: number) => (s + 1) % steps.length)}
                 >
                   Próximo
                 </button>

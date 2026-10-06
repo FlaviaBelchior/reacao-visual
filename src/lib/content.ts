@@ -38,7 +38,7 @@ export async function loadModules(): Promise<ModuleCard[]> {
 
   if (error || !data?.length) return localModules;
 
-  return data.map((row) => ({
+  return data.map((row: any) => ({
     to: `/${row.slug}`,
     icon: iconBySlug[row.slug] ?? '🧪',
     title: row.title,
@@ -65,7 +65,7 @@ export async function loadGlossary(): Promise<GlossaryTerm[]> {
 
   if (error || !data?.length) return localGlossary;
 
-  return data.map((row) => ({
+  return data.map((row: any) => ({
     term: row.term_pt,
     definition: row.definition_pt,
     example: row.example,
