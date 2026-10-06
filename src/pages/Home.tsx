@@ -29,6 +29,8 @@ export function Home() {
           'Observe, jogue, experimente e depois responda.',
         ]}
         actions={['Começar', 'Abrir jogo', 'Ver glossário', 'Ir ao laboratório']}
+        state="welcome"
+        message="Olá! Eu vou acompanhar você durante toda a experiência. Escolha uma atividade para começarmos."
       />
 
       <section className="hero-box professional-hero">
