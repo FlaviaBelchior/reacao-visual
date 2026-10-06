@@ -107,3 +107,46 @@ button{cursor:pointer}
  .hero-pro .hero-copy{padding:42px}
  .hero-visual{min-height:560px}
 }
+
+
+/* Libras-first communication architecture */
+.language-priority{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:18px;padding:12px 15px;border-radius:16px;background:#0f172a;color:#fff}
+.language-priority strong{font-size:14px}.language-priority span{color:#cbd5e1;font-size:12px}
+.libras-first-hero{display:grid;gap:20px;align-items:stretch}
+.hero-libras-column{padding:24px;border-radius:28px;background:linear-gradient(145deg,#ede9fe,#eef2ff);border:1px solid #ddd6fe;display:flex;flex-direction:column;gap:16px;justify-content:space-between}
+.libras-video{display:grid;gap:12px}.libras-video.compact{gap:8px}
+.video-stage{position:relative;aspect-ratio:16/9;min-height:220px;border-radius:22px;overflow:hidden;background:linear-gradient(160deg,#111827,#312e81);display:grid;place-items:center;border:1px solid rgba(255,255,255,.08)}
+.compact .video-stage{min-height:150px;border-radius:18px}
+.video-hand{font-size:66px;z-index:2;filter:drop-shadow(0 12px 20px rgba(0,0,0,.25))}
+.video-rings{position:absolute;inset:0;display:grid;place-items:center}
+.video-rings i{position:absolute;width:120px;height:120px;border:2px solid rgba(196,181,253,.45);border-radius:50%}
+.video-rings i:nth-child(2){width:175px;height:175px;opacity:.55}.video-rings i:nth-child(3){width:230px;height:230px;opacity:.25}
+.video-status{position:absolute;left:14px;bottom:14px;padding:7px 10px;border-radius:999px;background:rgba(15,23,42,.72);color:#e2e8f0;font-size:10px;font-weight:800;letter-spacing:.02em}
+.video-meta{display:grid;gap:4px}.video-meta strong{font-size:17px}.video-meta span{font-size:12px;color:#64748b;line-height:1.5}
+.libras-chip{display:inline-flex;padding:6px 8px;border-radius:999px;background:#f5f3ff;color:#6d28d9;font-size:10px;font-weight:900;letter-spacing:.03em}
+.communication-principle{margin-top:30px;display:grid;gap:20px;align-items:center;padding:28px;border-radius:28px;background:#111827;color:white}
+.communication-principle h2{font-size:clamp(28px,4vw,44px);line-height:1.05;letter-spacing:-.035em;margin:6px 0 10px}.communication-principle p{margin:0;color:#cbd5e1;line-height:1.7}
+.communication-icon{width:108px;height:108px;border-radius:30px;background:#312e81;display:grid;place-items:center;font-size:50px}
+.support-text{margin:12px 0 20px;border:1px solid var(--line);border-radius:14px;background:#fff;overflow:hidden}
+.support-text summary{padding:13px 15px;cursor:pointer;font-weight:800;color:#475569}.support-text>div{padding:0 15px 14px;color:#64748b}
+.response-mode{margin-top:28px;padding:22px;border:1px solid #ddd6fe;border-radius:24px;background:linear-gradient(145deg,#faf5ff,#eef2ff)}
+.response-mode h3{margin:5px 0 15px;font-size:22px}
+.response-options{display:grid;gap:10px}.response-option{display:grid;grid-template-columns:42px 1fr;column-gap:10px;text-align:left;align-items:center;padding:13px;border:1px solid #ddd6fe;border-radius:16px;background:#fff;color:#1e293b}.response-option span{grid-row:1/3;font-size:25px}.response-option strong{font-size:13px}.response-option small{color:#64748b}.response-option.selected{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.09)}
+.response-placeholder{margin-top:12px;padding:14px;border-radius:14px;background:white;border:1px dashed #c4b5fd;color:#6d28d9;font-weight:700}
+.response-mode textarea{width:100%;min-height:130px;margin-top:12px;border:1px solid #c4b5fd;border-radius:14px;padding:13px;resize:vertical}
+.libras-lesson-grid{display:grid;gap:14px}.libras-lesson{padding:14px;border-radius:22px;background:#fff;border:1px solid var(--line)}
+.lesson-support{display:flex;gap:10px;align-items:flex-start;margin-top:12px}.lesson-support>span{font-size:28px}.lesson-support strong{display:block}.lesson-support p{margin:3px 0 0;color:#64748b;line-height:1.5}
+.validation-note{margin-top:18px;padding:15px;border-radius:16px;background:#fffbeb;border:1px solid #fde68a;color:#92400e;line-height:1.55}
+.glossary-list{display:grid;gap:14px}.glossary-libras-card{display:grid;gap:18px;padding:16px;border-radius:22px;background:white;border:1px solid var(--line)}
+.glossary-support>span{font-size:9px;font-weight:900;letter-spacing:.14em;color:#94a3b8}.glossary-support h2{margin:6px 0 7px}.glossary-support p{color:#64748b;line-height:1.6}
+@media(min-width:760px){
+ .response-options{grid-template-columns:repeat(3,1fr)}
+ .libras-lesson-grid{grid-template-columns:repeat(2,1fr)}
+ .glossary-libras-card{grid-template-columns:1.1fr .9fr;align-items:center}
+}
+@media(min-width:960px){
+ .libras-first-hero{grid-template-columns:1fr 1fr}
+ .hero-libras-column{padding:30px}
+ .communication-principle{grid-template-columns:130px 1fr}
+ .libras-lesson-grid{grid-template-columns:repeat(3,1fr)}
+}
