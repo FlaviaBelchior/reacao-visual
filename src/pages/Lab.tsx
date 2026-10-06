@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { ExpressionChoice } from '../components/ExpressionChoice';
-import { MascotGuide } from '../components/MascotGuide';
+import { MascotGuide, type MascotState } from '../components/MascotGuide';
 import { MediaPanel } from '../components/MediaPanel';
 
 const steps = [
@@ -18,18 +18,27 @@ export function Lab() {
   const diff = a && b ? (Number(b) - Number(a)).toFixed(2) : null;
   const completion = useMemo(() => Math.round((checked.length / steps.length) * 100), [checked]);
 
+  const mascotState: MascotState = completion === 100 ? 'celebrate' : checked.length > 0 ? 'teach' : 'safety';
+  const mascotMessage = completion === 100
+    ? 'Excelente! Você concluiu todas as etapas. Agora compare as massas e explique o que aconteceu com o gás.'
+    : checked.length > 0
+      ? `Muito bem. Você concluiu ${checked.length} de ${steps.length} etapas. Próxima orientação: ${steps[Math.min(checked.length, steps.length - 1)]}`
+      : 'Antes de começar, confira os materiais e siga as orientações de segurança.';
+
   const toggleStep = (index: number) => {
-    setChecked((current: number[]) => current.includes(index) ? current.filter((item: number) => item !== index) : [...current, index]);
+    setChecked((current) => current.includes(index) ? current.filter((item) => item !== index) : [...current, index]);
   };
 
   return (
     <section className="page">
       <MascotGuide
-        title="Experimento guiado em Libras"
-        intro="Antes de começar, veja comigo os materiais, a segurança e o que você precisa observar."
-        supportText="O estudante segue uma sequência guiada. A mascote apresenta os materiais, chama a atenção para o gás, para a conservação da massa e para a relação entre o que se vê e a equação."
-        steps={['Veja os materiais.', 'Observe a segurança.', 'Meça antes e depois.', 'Explique o que aconteceu.']}
-        actions={['Ver materiais', 'Segurança', 'Comparar massas']}
+        title="Experimento guiado"
+        intro="Eu vou acompanhar cada etapa do experimento e reagir ao seu progresso."
+        supportText="A mascote muda a gesticulação conforme o estudante avança e destaca segurança, próxima etapa e conclusão."
+        steps={['Confira os materiais.', 'Observe a segurança.', 'Meça antes e depois.', 'Explique o resultado.']}
+        actions={['Materiais', 'Segurança', 'Medição', 'Conclusão']}
+        state={mascotState}
+        message={mascotMessage}
       />
 
       <div className="two-column">
@@ -54,18 +63,11 @@ export function Lab() {
       </div>
 
       <div className="form-row">
-        <label>
-          Massa inicial (g)
-          <input inputMode="decimal" value={a} onChange={(e: any) => setA(e.target.value)} />
-        </label>
-        <label>
-          Massa final (g)
-          <input inputMode="decimal" value={b} onChange={(e: any) => setB(e.target.value)} />
-        </label>
+        <label>Massa inicial (g)<input inputMode="decimal" value={a} onChange={(e) => setA(e.target.value)} /></label>
+        <label>Massa final (g)<input inputMode="decimal" value={b} onChange={(e) => setB(e.target.value)} /></label>
       </div>
 
       {diff && <div className="result">Diferença observada: <strong>{diff} g</strong></div>}
-
       <div className="equation">NaHCO₃ + CH₃COOH → CH₃COONa + H₂O + CO₂</div>
 
       <div className="principles">
