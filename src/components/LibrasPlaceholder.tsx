@@ -1,0 +1,1 @@
+export function LibrasPlaceholder({label='Vídeo em Libras — inserir conteúdo validado'}:{label?:string}){return <aside className="libras-box" aria-label={label}><span aria-hidden>🤟</span><div><strong>LIBRAS</strong><p>{label}</p></div></aside>}

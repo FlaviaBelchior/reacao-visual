@@ -1,1 +1,12 @@
-{"name":"ReAção Visual","short_name":"ReAção","start_url":"/","display":"standalone","background_color":"#f8fafc","theme_color":"#2563eb","icons":[{"src":"/icon.svg","sizes":"any","type":"image/svg+xml"}]}
+{
+  "name": "ReAção Visual",
+  "short_name": "ReAção Visual",
+  "description": "Laboratório bilíngue e visual de reações químicas.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F8FAFC",
+  "theme_color": "#2563EB",
+  "icons": [
+    {"src":"/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}
