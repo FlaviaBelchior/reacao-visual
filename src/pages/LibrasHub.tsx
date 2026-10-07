@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { MascotGuide } from '../components/MascotGuide';
 import { MediaPanel } from '../components/MediaPanel';
 
@@ -23,6 +24,20 @@ export function LibrasHub() {
         ]}
         actions={['Começar em Libras', 'Escolher trilha', 'Abrir jogo']}
       />
+
+      <Link to="/libras/jogo-ph" className="hero-box" style={{ display: 'grid', gap: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+          <span className="module-icon" aria-hidden>🤟</span>
+          <span className="module-icon" aria-hidden>🧪</span>
+          <span className="module-icon" aria-hidden>🎯</span>
+        </div>
+        <div className="learning-flow" aria-hidden>
+          <span>👀</span><span>→</span><span>pH</span><span>→</span><span>🤟</span>
+        </div>
+        <div className="cta-row">
+          <span className="primary-link" aria-hidden>▶</span>
+        </div>
+      </Link>
 
       <div className="hub-grid">
         {lessons.map((lesson) => (
