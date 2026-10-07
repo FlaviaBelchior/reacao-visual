@@ -1,169 +1,164 @@
 import { useMemo, useState } from 'react';
 import { VerifiedLibrasVideo } from '../components/VerifiedLibrasVideo';
+import { sinquiStages, type SinquiTerm } from '../data/sinquiTerms';
 import '../styles/libras-only.css';
 
-type Concept = {
-  id: 'atom' | 'electron' | 'proton' | 'molecule' | 'reaction' | 'element';
-  driveId: string;
-};
+type Mode = 'map' | 'play' | 'review';
 
-const concepts: Concept[] = [
-  { id: 'atom', driveId: '1dr0kmFi0ukBUnirW8imVSo7RMPkJMmXs' },
-  { id: 'electron', driveId: '1xjVra4cg-q8uOCguIS3al6aLio7XdBHv' },
-  { id: 'proton', driveId: '1HUdjZ39lYCFQozl7q2WLh4b3Vk3NCcWp' },
-  { id: 'molecule', driveId: '1moXvJmgD0JcjOb-jtyG9ATNm3LJTOzKK' },
-  { id: 'reaction', driveId: '19VKFyRSarG6p1K82EX1nHAZ3RH3kTZCQ' },
-  { id: 'element', driveId: '1XNtY-C0UwpUDMX8pqvyY1XhZnxXZ0Dh0' },
-];
+function Visual({ id }: { id: string }) {
+  const notation = (html: React.ReactNode, cls='notation-choice') => <span className={`choice-visual ${cls}`}>{html}</span>;
 
-const rounds: Array<{ answer: Concept['id']; options: Concept['id'][] }> = [
-  { answer: 'atom', options: ['atom', 'molecule', 'element'] },
-  { answer: 'electron', options: ['proton', 'electron', 'atom'] },
-  { answer: 'proton', options: ['electron', 'element', 'proton'] },
-  { answer: 'molecule', options: ['molecule', 'atom', 'reaction'] },
-  { answer: 'reaction', options: ['element', 'reaction', 'molecule'] },
-  { answer: 'element', options: ['atom', 'proton', 'element'] },
-];
-
-function ChemistryVisual({ id }: { id: Concept['id'] }) {
-  if (id === 'atom') return <span className="choice-visual emoji-choice">⚛️</span>;
-  if (id === 'electron') return <span className="choice-visual notation-choice">e<sup>−</sup></span>;
-  if (id === 'proton') return <span className="choice-visual notation-choice">p<sup>+</sup></span>;
-  if (id === 'molecule') return <span className="choice-visual notation-choice molecule-choice">H<sub>2</sub>O</span>;
-  if (id === 'reaction') {
-    return (
-      <span className="choice-visual reaction-choice" aria-hidden>
-        <span className="particle-blue">●</span>
-        <span>＋</span>
-        <span className="particle-red">▲</span>
-        <span>→</span>
-        <span className="particle-mix">●▲</span>
-      </span>
-    );
+  switch (id) {
+    case 'atom': return <span className="choice-visual emoji-choice">⚛️</span>;
+    case 'electron': return notation(<span>e<sup>−</sup></span>);
+    case 'electrosphere': return <span className="concept-orbit"><i/><i/><i/><b>•</b></span>;
+    case 'nucleus': return <span className="concept-nucleus"><b>＋</b><b>○</b><b>＋</b></span>;
+    case 'proton': return notation(<span>p<sup>+</sup></span>);
+    case 'neutron': return notation(<span>n<sup>0</sup></span>);
+    case 'element': return <span className="choice-periodic"><small>26</small><strong>Fe</strong></span>;
+    case 'cation': return notation(<span>Na<sup>+</sup></span>);
+    case 'anion': return notation(<span>Cl<sup>−</sup></span>);
+    case 'ion': return <span className="choice-visual ion-choice"><span>＋</span><span>⚛️</span><span>−</span></span>;
+    case 'covalent': return notation(<span>H—H</span>, 'bond-choice');
+    case 'ionic': return notation(<span>Na<sup>+</sup> ··· Cl<sup>−</sup></span>, 'bond-choice');
+    case 'simple-substance': return notation(<span>O<sub>2</sub></span>);
+    case 'compound-substance': return notation(<span>H<sub>2</sub>O</span>);
+    case 'molecule': return notation(<span>H—O—H</span>, 'bond-choice');
+    case 'homogeneous': return <span className="mixture-cup homogeneous-cup"><i/></span>;
+    case 'heterogeneous': return <span className="mixture-cup heterogeneous-cup"><i/><i/></span>;
+    case 'solid': return <span className="choice-visual emoji-choice">🧊</span>;
+    case 'liquid': return <span className="choice-visual emoji-choice">💧</span>;
+    case 'gas': return <span className="choice-visual emoji-choice">☁️</span>;
+    case 'fusion': return <span className="transition-choice"><span>🧊</span><b>→</b><span>💧</span></span>;
+    case 'vaporization': return <span className="transition-choice"><span>💧</span><b>→</b><span>☁️</span></span>;
+    case 'solidification': return <span className="transition-choice"><span>💧</span><b>→</b><span>🧊</span></span>;
+    case 'condensation': return <span className="transition-choice"><span>☁️</span><b>→</b><span>💧</span></span>;
+    case 'sublimation': return <span className="transition-choice"><span>🧊</span><b>→</b><span>☁️</span></span>;
+    case 'physical-phenomenon': return <span className="transition-choice"><span>🧊</span><b>→</b><span>💧</span></span>;
+    case 'chemical-phenomenon': return <span className="transition-choice"><span>🕯️</span><b>→</b><span>🔥</span></span>;
+    case 'chemical-reaction': return <span className="choice-visual reaction-choice"><span className="particle-blue">●</span><span>＋</span><span className="particle-red">▲</span><span>→</span><span className="particle-mix">●▲</span></span>;
+    case 'endothermic': return <span className="energy-flow"><span>🔥</span><b>→</b><span>🧪</span></span>;
+    case 'exothermic': return <span className="energy-flow"><span>🧪</span><b>→</b><span>🔥</span></span>;
+    case 'energy': return <span className="choice-visual emoji-choice">⚡</span>;
+    case 'electrical-energy': return <span className="energy-flow"><span>🔌</span><span>⚡</span></span>;
+    case 'chemical-energy': return <span className="energy-flow"><span>🔋</span><span>🧪</span></span>;
+    case 'heat': return <span className="choice-visual emoji-choice">♨️</span>;
+    case 'thermal-energy': return <span className="energy-flow"><span>🌡️</span><span>🔥</span></span>;
+    case 'light-energy': return <span className="choice-visual emoji-choice">💡</span>;
+    case 'sound-energy': return <span className="choice-visual emoji-choice">🔊</span>;
+    case 'rutherford': return <span className="scientist-model rutherford-model"><span>🎯</span><span>⚛️</span></span>;
+    case 'thomson': return <span className="plum-model"><i/><i/><i/><i/></span>;
+    case 'dalton': return <span className="dalton-model">●</span>;
+    case 'mendeleev': return <span className="periodic-grid">{Array.from({length:18}).map((_,i)=><i key={i}/>)}</span>;
+    case 'bohr': return <span className="bohr-model"><i/><i/><b>●</b></span>;
+    default: return <span className="choice-visual emoji-choice">🧪</span>;
   }
+}
 
-  return (
-    <span className="choice-periodic" aria-hidden>
-      <small>26</small>
-      <strong>Fe</strong>
-    </span>
-  );
+function choicesFor(terms: SinquiTerm[], index: number) {
+  const answer = terms[index];
+  const a = terms[(index + 1) % terms.length];
+  const b = terms[(index + Math.max(2, Math.floor(terms.length / 2))) % terms.length];
+  const options = [answer, a, b];
+  const shift = index % 3;
+  return [...options.slice(shift), ...options.slice(0, shift)];
 }
 
 export function LibrasGame() {
-  const [started, setStarted] = useState(false);
-  const [roundIndex, setRoundIndex] = useState(0);
-  const [wrongPick, setWrongPick] = useState<Concept['id'] | null>(null);
-  const [correctPick, setCorrectPick] = useState<Concept['id'] | null>(null);
-  const [score, setScore] = useState(0);
-  const [finished, setFinished] = useState(false);
+  const [mode, setMode] = useState<Mode>('map');
+  const [stageIndex, setStageIndex] = useState(0);
+  const [round, setRound] = useState(0);
+  const [wrong, setWrong] = useState<string | null>(null);
+  const [right, setRight] = useState<string | null>(null);
+  const [completed, setCompleted] = useState<number[]>([]);
+  const [reviewTerm, setReviewTerm] = useState(0);
 
-  const current = rounds[roundIndex];
-  const sign = useMemo(
-    () => concepts.find((concept) => concept.id === current.answer)!,
-    [current],
-  );
+  const stage = sinquiStages[stageIndex];
+  const term = stage.terms[round];
+  const options = useMemo(() => choicesFor(stage.terms, round), [stage, round]);
 
-  const start = () => {
-    setStarted(true);
-    setRoundIndex(0);
-    setWrongPick(null);
-    setCorrectPick(null);
-    setScore(0);
-    setFinished(false);
+  const openStage = (index: number) => {
+    setStageIndex(index);
+    setRound(0);
+    setWrong(null);
+    setRight(null);
+    setMode('play');
   };
 
-  const choose = (id: Concept['id']) => {
-    if (correctPick) return;
-
-    if (id !== current.answer) {
-      setWrongPick(id);
-      window.setTimeout(() => setWrongPick(null), 650);
+  const choose = (id: string) => {
+    if (right) return;
+    if (id !== term.id) {
+      setWrong(id);
+      window.setTimeout(() => setWrong(null), 650);
       return;
     }
 
-    setCorrectPick(id);
-    setScore((value) => value + 1);
-
+    setRight(id);
     window.setTimeout(() => {
-      if (roundIndex === rounds.length - 1) {
-        setFinished(true);
-        return;
+      if (round === stage.terms.length - 1) {
+        setCompleted((value) => value.includes(stage.id) ? value : [...value, stage.id]);
+        setReviewTerm(0);
+        setMode('review');
+      } else {
+        setRound((value) => value + 1);
+        setWrong(null);
+        setRight(null);
       }
-
-      setRoundIndex((value) => value + 1);
-      setWrongPick(null);
-      setCorrectPick(null);
-    }, 850);
+    }, 800);
   };
 
-  if (!started) {
-    const demo = concepts[0];
-
+  if (mode === 'map') {
+    const allDone = completed.length === sinquiStages.length;
     return (
       <section className="visual-only-page">
-        <div className="choice-game-intro">
-          <div className="choice-game-intro-icons" aria-hidden>
-            <span>🤟</span><span>↓</span><span>👆</span><span>✅</span>
-          </div>
+        <div className="sinqui-map-hero" aria-hidden>
+          <span>🤟</span><span>＋</span><span>⚗️</span><span>＝</span><span>{allDone ? '🏆' : '🎯'}</span>
+        </div>
 
-          <div className="choice-sign-stage">
-            <VerifiedLibrasVideo
-              source={{ kind: 'drive', id: demo.driveId }}
-              ariaLabel="Sinal em Libras"
-            />
-          </div>
+        <div className="sinqui-stage-grid">
+          {sinquiStages.map((item, index) => (
+            <button key={item.id} type="button" className={`sinqui-stage-card ${completed.includes(item.id) ? 'done' : ''}`} onClick={() => openStage(index)} aria-label={`Fase ${item.id}`}>
+              <span className="sinqui-stage-number">{item.id}</span>
+              <span className="sinqui-stage-icon" aria-hidden>{item.icon}</span>
+              <span className="sinqui-stage-count" aria-hidden>{item.terms.length}</span>
+              <span className="sinqui-stage-dots" aria-hidden>
+                {item.terms.map((_, i) => <i key={i}/>)}
+              </span>
+              {completed.includes(item.id) && <span className="sinqui-stage-check" aria-hidden>✓</span>}
+            </button>
+          ))}
+        </div>
 
-          <div className="choice-intro-options" aria-hidden>
-            <div className="choice-option demo-correct">
-              <ChemistryVisual id="atom" />
-              <span className="choice-feedback">✓</span>
-            </div>
-            <div className="choice-option"><ChemistryVisual id="molecule" /></div>
-            <div className="choice-option"><ChemistryVisual id="element" /></div>
-          </div>
-
-          <button type="button" className="visual-only-start choice-start" onClick={start} aria-label="Iniciar">
-            ▶
-          </button>
+        <div className="sinqui-total" aria-hidden>
+          <span>🤟</span><strong>42</strong><span>⚗️</span>
         </div>
       </section>
     );
   }
 
-  if (finished) {
+  if (mode === 'review') {
+    const current = stage.terms[reviewTerm];
     return (
       <section className="visual-only-page">
-        <div className="choice-finish">
-          <div className="choice-finish-icons" aria-hidden>
-            <span>🏆</span><span>🤟</span><span>⚗️</span>
+        <div className="sinqui-review">
+          <div className="sinqui-review-top" aria-hidden>
+            <span>✅</span><span>{stage.icon}</span><span>{reviewTerm + 1}/{stage.terms.length}</span>
           </div>
 
-          <div className="choice-finish-score" aria-hidden>
-            <span>✅</span>
-            <strong>{score}/{rounds.length}</strong>
+          <div className="sinqui-review-pair">
+            <div className="sinqui-review-video">
+              <VerifiedLibrasVideo source={{kind:'youtube', id:current.videoId}} ariaLabel="Sinal em Libras" />
+            </div>
+            <div className="sinqui-review-visual">
+              <Visual id={current.visual} />
+            </div>
           </div>
 
-          <div className="choice-review">
-            {concepts.map((concept) => (
-              <div className="choice-review-item" key={concept.id}>
-                <div className="choice-review-sign">
-                  <VerifiedLibrasVideo
-                    source={{ kind: 'drive', id: concept.driveId }}
-                    ariaLabel="Sinal em Libras"
-                    compact
-                  />
-                </div>
-                <div className="choice-review-symbol">
-                  <ChemistryVisual id={concept.id} />
-                </div>
-              </div>
-            ))}
+          <div className="sinqui-review-controls">
+            <button type="button" onClick={() => setReviewTerm((v) => (v - 1 + stage.terms.length) % stage.terms.length)} aria-label="Anterior">←</button>
+            <button type="button" onClick={() => setMode('map')} aria-label="Mapa">⌂</button>
+            <button type="button" onClick={() => setReviewTerm((v) => (v + 1) % stage.terms.length)} aria-label="Próximo">→</button>
           </div>
-
-          <button type="button" className="visual-only-start choice-start" onClick={start} aria-label="Reiniciar">
-            ↻
-          </button>
         </div>
       </section>
     );
@@ -171,54 +166,37 @@ export function LibrasGame() {
 
   return (
     <section className="visual-only-page">
-      <div className="choice-progress" aria-hidden>
-        {rounds.map((_, index) => (
-          <i
-            key={index}
-            className={
-              index < roundIndex
-                ? 'done'
-                : index === roundIndex
-                  ? 'active'
-                  : ''
-            }
-          />
-        ))}
+      <div className="sinqui-play-header" aria-hidden>
+        <button type="button" onClick={() => setMode('map')} aria-label="Mapa">⌂</button>
+        <div className="sinqui-progress">
+          {stage.terms.map((_, index) => <i key={index} className={index < round ? 'done' : index === round ? 'active' : ''}/>)}
+        </div>
+        <span>{round + 1}/{stage.terms.length}</span>
       </div>
 
       <div className="choice-game">
         <div className="choice-sign-stage">
-          <VerifiedLibrasVideo
-            source={{ kind: 'drive', id: sign.driveId }}
-            ariaLabel="Sinal em Libras"
-          />
+          <VerifiedLibrasVideo source={{ kind:'youtube', id:term.videoId }} ariaLabel="Sinal em Libras" />
         </div>
 
         <div className="choice-down-arrow" aria-hidden>↓</div>
 
         <div className="choice-grid">
-          {current.options.map((id) => {
-            const isWrong = wrongPick === id;
-            const isCorrect = correctPick === id;
-
-            return (
-              <button
-                key={id}
-                type="button"
-                className={`choice-option ${isWrong ? 'wrong' : ''} ${isCorrect ? 'correct' : ''}`}
-                onClick={() => choose(id)}
-                disabled={Boolean(correctPick)}
-                aria-label="Opção"
-              >
-                <ChemistryVisual id={id} />
-                {(isWrong || isCorrect) && (
-                  <span className="choice-feedback" aria-hidden>
-                    {isCorrect ? '✓' : '✕'}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+          {options.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              className={`choice-option ${wrong === option.id ? 'wrong' : ''} ${right === option.id ? 'correct' : ''}`}
+              onClick={() => choose(option.id)}
+              disabled={Boolean(right)}
+              aria-label="Opção visual"
+            >
+              <Visual id={option.visual} />
+              {(wrong === option.id || right === option.id) && (
+                <span className="choice-feedback" aria-hidden>{right === option.id ? '✓' : '✕'}</span>
+              )}
+            </button>
+          ))}
         </div>
       </div>
     </section>
