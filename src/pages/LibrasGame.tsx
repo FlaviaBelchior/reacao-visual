@@ -1,54 +1,29 @@
-import { useMemo, useState } from 'react';
-import '../styles/libras-game.css';
+import { useState } from 'react';
+import { VerifiedLibrasVideo } from '../components/VerifiedLibrasVideo';
+import '../styles/libras-only.css';
 
-type Answer = 'acid' | 'base';
 type Stage = 'learn' | 'play' | 'feedback' | 'finish';
 
 type Round = {
   icon: string;
   ph: number;
-  answer: Answer;
+  isBase: boolean;
 };
 
-const SIGN = {
-  acid: 'IKjm5u7yNbE',
-  base: 'tlvoIMnOIUE',
-  correct: 'ZXA_pJr_1bs',
-  wrong: 'h2RY7NlG_5A',
-  celebrate: 'HjQt_xgK-g8',
-};
+const BASE_SIGN = { kind: 'youtube' as const, id: 'Vb9eRbjJAZ4' };
 
 const rounds: Round[] = [
-  { icon: '🍋', ph: 2, answer: 'acid' },
-  { icon: '🧼', ph: 10, answer: 'base' },
-  { icon: '🍊', ph: 3, answer: 'acid' },
-  { icon: '🧂', ph: 8.3, answer: 'base' },
+  { icon: '🧼', ph: 10, isBase: true },
+  { icon: '🍋', ph: 2, isBase: false },
+  { icon: '🧂', ph: 8.3, isBase: true },
+  { icon: '🍊', ph: 3, isBase: false },
 ];
 
-function SignClip({ id, label }: { id: string; label: string }) {
-  const src = useMemo(
-    () => `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=0&rel=0&playsinline=1&fs=0&disablekb=1`,
-    [id],
-  );
-
-  return (
-    <div className="libras-sign-clip">
-      <iframe
-        src={src}
-        title={label}
-        allow="autoplay; encrypted-media; picture-in-picture"
-        referrerPolicy="strict-origin-when-cross-origin"
-      />
-    </div>
-  );
-}
-
-function PhScale({ ph }: { ph: number }) {
-  const left = Math.min(100, Math.max(0, (ph / 14) * 100));
-
+function PhBar({ ph }: { ph: number }) {
+  const pos = Math.max(0, Math.min(100, (ph / 14) * 100));
   return (
     <div className="libras-game-scale" aria-label={`pH ${ph}`}>
-      <span className="libras-game-scale-pointer" style={{ left: `${left}%` }} />
+      <span className="libras-game-scale-pointer" style={{ left: `${pos}%` }} />
       <div className="libras-game-scale-track" />
       <div className="libras-game-scale-labels" aria-hidden>
         <span>0</span><span>7</span><span>14</span>
@@ -61,134 +36,106 @@ export function LibrasGame() {
   const [stage, setStage] = useState<Stage>('learn');
   const [round, setRound] = useState(0);
   const [score, setScore] = useState(0);
-  const [correct, setCorrect] = useState(false);
+  const [lastCorrect, setLastCorrect] = useState(false);
 
   const current = rounds[round];
 
   const start = () => {
     setRound(0);
     setScore(0);
-    setCorrect(false);
+    setLastCorrect(false);
     setStage('play');
   };
 
-  const choose = (answer: Answer) => {
-    const hit = answer === current.answer;
-    setCorrect(hit);
-    if (hit) setScore((value) => value + 1);
+  const answer = (choice: boolean) => {
+    const ok = choice === current.isBase;
+    setLastCorrect(ok);
+    if (ok) setScore((s) => s + 1);
     setStage('feedback');
   };
 
-  const advance = () => {
-    if (!correct) {
+  const next = () => {
+    if (!lastCorrect) {
       setStage('play');
       return;
     }
-    if (round === rounds.length - 1) {
+    if (round >= rounds.length - 1) {
       setStage('finish');
       return;
     }
-    setRound((value) => value + 1);
-    setCorrect(false);
+    setRound((r) => r + 1);
     setStage('play');
   };
 
   return (
-    <section className="libras-game-page">
-      <div className="libras-game">
-        <div className="libras-game-top" aria-hidden>
-          <div className="libras-game-mark"><span>🤟</span><span>🧪</span></div>
-          <div className="libras-game-progress">
-            {rounds.map((_, index) => (
-              <i
-                key={index}
-                className={index < round || stage === 'finish' ? 'done' : index === round && stage !== 'learn' ? 'active' : ''}
-              />
-            ))}
+    <section className="visual-only-page">
+      <div className="visual-round-indicator" aria-hidden>
+        {rounds.map((_, index) => (
+          <i key={index} className={stage === 'finish' || index < round ? 'done' : index === round && stage !== 'learn' ? 'active' : ''} />
+        ))}
+      </div>
+
+      <div className="visual-only-game-shell">
+        {stage === 'learn' && (
+          <div className="visual-only-game-stage">
+            <VerifiedLibrasVideo source={BASE_SIGN} ariaLabel="Sinal de base em Libras" />
+            <PhBar ph={9} />
+            <div className="visual-only-flow" aria-hidden>
+              <span>🤟</span><span>＝</span><span>pH</span><span>›</span><span>7</span>
+            </div>
+            <button type="button" className="visual-only-start" onClick={start} aria-label="Iniciar">▶</button>
           </div>
-        </div>
+        )}
 
-        <div className="libras-game-panel">
-          {stage === 'learn' && (
-            <div className="libras-game-stage libras-game-intro">
-              <PhScale ph={7} />
-              <div className="libras-sign-grid">
-                <div className="libras-sign-card acid">
-                  <SignClip id={SIGN.acid} label="LIBRAS" />
-                  <div className="libras-sign-select" aria-hidden>🤟</div>
+        {stage === 'play' && (
+          <div className="visual-only-game-stage">
+            <div className="visual-example" aria-hidden>{current.icon}</div>
+            <PhBar ph={current.ph} />
+            <div className="visual-only-flow" aria-hidden>
+              <span>👀</span><span>→</span><span>pH {current.ph}</span><span>→</span><span>?</span>
+            </div>
+
+            <div className="visual-choice-grid">
+              <button type="button" className="visual-choice" onClick={() => answer(true)} aria-label="Sim">
+                <VerifiedLibrasVideo source={BASE_SIGN} ariaLabel="Sinal de base em Libras" compact />
+                <span className="visual-choice-mark" aria-hidden>✓</span>
+              </button>
+
+              <button type="button" className="visual-choice" onClick={() => answer(false)} aria-label="Não">
+                <div className="visual-example" style={{ minHeight: 0, aspectRatio: '4 / 3', border: 0, borderRadius: 0 }} aria-hidden>
+                  <div className="sequence"><span>🤟</span><span style={{ color: '#ef4444' }}>✕</span></div>
                 </div>
-                <div className="libras-sign-card base">
-                  <SignClip id={SIGN.base} label="LIBRAS" />
-                  <div className="libras-sign-select" aria-hidden>🤟</div>
-                </div>
-              </div>
-              <div className="libras-game-flow" aria-hidden><span>👀</span><span>→</span><span>🧠</span><span>→</span><span>🎯</span></div>
-              <button type="button" className="libras-game-action" onClick={start} aria-label="Iniciar">
-                ▶
+                <span className="visual-choice-mark" aria-hidden>✕</span>
               </button>
             </div>
-          )}
+          </div>
+        )}
 
-          {stage === 'play' && (
-            <div className="libras-game-stage">
-              <div className="libras-game-substance" aria-label={`pH ${current.ph}`}>
-                <span className="object" aria-hidden>{current.icon}</span>
-                <span className="ph">pH {current.ph}</span>
-              </div>
+        {stage === 'feedback' && (
+          <div className="visual-feedback">
+            <div className="visual-feedback-symbol" aria-hidden>{lastCorrect ? '✅' : '❌'}</div>
+            {lastCorrect && <VerifiedLibrasVideo source={BASE_SIGN} ariaLabel="Sinal de base em Libras" compact />}
+            <button
+              type="button"
+              className="visual-only-start"
+              onClick={next}
+              aria-label={lastCorrect ? 'Continuar' : 'Tentar novamente'}
+            >
+              {lastCorrect ? '→' : '↻'}
+            </button>
+          </div>
+        )}
 
-              <PhScale ph={current.ph} />
-
-              <div className="libras-game-flow" aria-hidden><span>👀</span><span>→</span><span>🤟</span></div>
-
-              <div className="libras-sign-grid">
-                <div className="libras-sign-card acid">
-                  <SignClip id={SIGN.acid} label="LIBRAS" />
-                  <button type="button" className="libras-sign-select" onClick={() => choose('acid')} aria-label="Selecionar primeiro sinal">
-                    👆
-                  </button>
-                </div>
-                <div className="libras-sign-card base">
-                  <SignClip id={SIGN.base} label="LIBRAS" />
-                  <button type="button" className="libras-sign-select" onClick={() => choose('base')} aria-label="Selecionar segundo sinal">
-                    👆
-                  </button>
-                </div>
-              </div>
+        {stage === 'finish' && (
+          <div className="visual-feedback">
+            <div className="visual-feedback-symbol" aria-hidden>🏆</div>
+            <div className="visual-score" aria-label={`${score} de ${rounds.length}`}>
+              <span>{score}</span><span>/ {rounds.length}</span>
             </div>
-          )}
-
-          {stage === 'feedback' && (
-            <div className={`libras-game-stage libras-game-feedback ${correct ? 'correct' : 'wrong'}`}>
-              <div className="libras-game-feedback-icon" aria-hidden>{correct ? '✓' : '✕'}</div>
-              <div className="libras-feedback-video">
-                <SignClip id={correct ? SIGN.correct : SIGN.wrong} label="LIBRAS" />
-              </div>
-              <button
-                type="button"
-                className={`libras-game-action ${correct ? 'success' : 'retry'}`}
-                onClick={advance}
-                aria-label={correct ? 'Continuar' : 'Tentar novamente'}
-              >
-                {correct ? '→' : '↻'}
-              </button>
-            </div>
-          )}
-
-          {stage === 'finish' && (
-            <div className="libras-game-stage libras-game-feedback correct">
-              <div className="libras-game-feedback-icon" aria-hidden>🏆</div>
-              <div className="libras-feedback-video">
-                <SignClip id={SIGN.celebrate} label="LIBRAS" />
-              </div>
-              <div className="libras-game-score" aria-label={`${score} de ${rounds.length}`}>
-                <span>{score}</span><small>/ {rounds.length}</small>
-              </div>
-              <button type="button" className="libras-game-action secondary" onClick={() => setStage('learn')} aria-label="Reiniciar">
-                ↻
-              </button>
-            </div>
-          )}
-        </div>
+            <div className="visual-only-symbols" aria-hidden><span>👏</span><span>🤟</span><span>👏</span></div>
+            <button type="button" className="visual-only-start" onClick={() => setStage('learn')} aria-label="Reiniciar">↻</button>
+          </div>
+        )}
       </div>
     </section>
   );
