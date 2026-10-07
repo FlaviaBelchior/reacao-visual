@@ -11,7 +11,7 @@ type VerifiedLibrasVideoProps = {
 export function VerifiedLibrasVideo({ source, ariaLabel, compact = false }: VerifiedLibrasVideoProps) {
   const src =
     source.kind === 'drive'
-      ? `https://drive.google.com/file/d/${source.id}/preview`
+      ? `https://drive.google.com/file/d/${source.id}/preview?autoplay=1`
       : `https://www.youtube-nocookie.com/embed/${source.id}?autoplay=1&mute=1&loop=1&playlist=${source.id}&controls=0&rel=0&playsinline=1&fs=0&disablekb=1`;
 
   return (
@@ -21,6 +21,7 @@ export function VerifiedLibrasVideo({ source, ariaLabel, compact = false }: Veri
         title={ariaLabel}
         allow="autoplay; encrypted-media; picture-in-picture"
         referrerPolicy="strict-origin-when-cross-origin"
+        tabIndex={-1}
       />
     </div>
   );
