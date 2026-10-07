@@ -1,221 +1,257 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { VerifiedLibrasVideo } from '../components/VerifiedLibrasVideo';
 import '../styles/libras-only.css';
 
-type Stage = 'tutorial' | 'play' | 'finish';
-
-type Option = {
-  icon: string;
-  ph: number;
-  isBase: boolean;
+type Pair = {
+  id: string;
+  driveId: string;
 };
 
-type Round = {
-  options: Option[];
+type MemoryCard = {
+  uid: string;
+  pairId: string;
+  kind: 'symbol' | 'sign';
 };
 
-const BASE_SIGN = { kind: 'youtube' as const, id: 'Vb9eRbjJAZ4' };
-
-const rounds: Round[] = [
-  {
-    options: [
-      { icon: '🍋', ph: 2, isBase: false },
-      { icon: '🧼', ph: 10, isBase: true },
-      { icon: '🍊', ph: 3, isBase: false },
-    ],
-  },
-  {
-    options: [
-      { icon: '🥤', ph: 3, isBase: false },
-      { icon: '🧂', ph: 8.3, isBase: true },
-      { icon: '🍎', ph: 4, isBase: false },
-    ],
-  },
-  {
-    options: [
-      { icon: '🍋', ph: 2.5, isBase: false },
-      { icon: '🧴', ph: 11, isBase: true },
-      { icon: '🍅', ph: 4.5, isBase: false },
-    ],
-  },
-  {
-    options: [
-      { icon: '🍇', ph: 3.5, isBase: false },
-      { icon: '🧽', ph: 9, isBase: true },
-      { icon: '☕', ph: 5, isBase: false },
-    ],
-  },
+const pairs: Pair[] = [
+  { id: 'atom', driveId: '1dr0kmFi0ukBUnirW8imVSo7RMPkJMmXs' },
+  { id: 'electron', driveId: '1xjVra4cg-q8uOCguIS3al6aLio7XdBHv' },
+  { id: 'proton', driveId: '1HUdjZ39lYCFQozl7q2WLh4b3Vk3NCcWp' },
+  { id: 'molecule', driveId: '1moXvJmgD0JcjOb-jtyG9ATNm3LJTOzKK' },
+  { id: 'reaction', driveId: '19VKFyRSarG6p1K82EX1nHAZ3RH3kTZCQ' },
+  { id: 'element', driveId: '1XNtY-C0UwpUDMX8pqvyY1XhZnxXZ0Dh0' },
 ];
 
-function MiniScale({ ph }: { ph: number }) {
-  const pos = Math.max(0, Math.min(100, (ph / 14) * 100));
+function createDeck(): MemoryCard[] {
+  return pairs
+    .flatMap((pair) => [
+      { uid: `${pair.id}-symbol`, pairId: pair.id, kind: 'symbol' as const },
+      { uid: `${pair.id}-sign`, pairId: pair.id, kind: 'sign' as const },
+    ])
+    .sort(() => Math.random() - 0.5);
+}
+
+function ChemistrySymbol({ id }: { id: string }) {
+  if (id === 'atom') return <span className="memory-symbol emoji-symbol">⚛️</span>;
+  if (id === 'electron') return <span className="memory-symbol chem-notation">e<sup>−</sup></span>;
+  if (id === 'proton') return <span className="memory-symbol chem-notation">p<sup>+</sup></span>;
+  if (id === 'molecule') return <span className="memory-symbol chem-notation molecule-symbol">H<sub>2</sub>O</span>;
+  if (id === 'reaction') {
+    return (
+      <span className="memory-symbol reaction-symbol" aria-hidden>
+        <span>●</span><span>＋</span><span>▲</span><span>→</span><span>●▲</span>
+      </span>
+    );
+  }
   return (
-    <div className="match-card-strip" aria-hidden>
-      <span className="match-card-dot" style={{ left: `${pos}%` }} />
+    <span className="memory-periodic-tile" aria-hidden>
+      <small>26</small>
+      <strong>Fe</strong>
+    </span>
+  );
+}
+
+function SignThumbnail({ pair }: { pair: Pair }) {
+  return (
+    <div className="memory-sign-thumb" aria-hidden>
+      <span className="memory-sign-fallback">🤟</span>
+      <img
+        src={`https://drive.google.com/thumbnail?id=${pair.driveId}&sz=w1000`}
+        alt=""
+        draggable={false}
+        onError={(event) => {
+          event.currentTarget.style.opacity = '0';
+        }}
+      />
+      <span className="memory-hand-badge">🤟</span>
     </div>
   );
 }
 
 export function LibrasGame() {
-  const [stage, setStage] = useState<Stage>('tutorial');
-  const [roundIndex, setRoundIndex] = useState(0);
-  const [score, setScore] = useState(0);
-  const [picked, setPicked] = useState<number | null>(null);
+  const [started, setStarted] = useState(false);
+  const [deck, setDeck] = useState<MemoryCard[]>(() => createDeck());
+  const [flipped, setFlipped] = useState<string[]>([]);
+  const [matched, setMatched] = useState<string[]>([]);
+  const [moves, setMoves] = useState(0);
   const [locked, setLocked] = useState(false);
+  const [finished, setFinished] = useState(false);
 
-  const current = rounds[roundIndex];
-  const correctIndex = useMemo(
-    () => current.options.findIndex((option) => option.isBase),
-    [current],
-  );
-
-  const start = () => {
-    setStage('play');
-    setRoundIndex(0);
-    setScore(0);
-    setPicked(null);
+  const reset = () => {
+    setDeck(createDeck());
+    setFlipped([]);
+    setMatched([]);
+    setMoves(0);
     setLocked(false);
+    setFinished(false);
+    setStarted(true);
   };
 
-  const choose = (index: number) => {
-    if (locked) return;
-    setPicked(index);
-
-    if (index === correctIndex) {
-      setLocked(true);
-      setScore((value) => value + 1);
-
-      window.setTimeout(() => {
-        if (roundIndex === rounds.length - 1) {
-          setStage('finish');
-          return;
-        }
-        setRoundIndex((value) => value + 1);
-        setPicked(null);
-        setLocked(false);
-      }, 900);
+  const flipCard = (card: MemoryCard) => {
+    if (
+      locked ||
+      matched.includes(card.pairId) ||
+      flipped.includes(card.uid) ||
+      flipped.length >= 2
+    ) {
       return;
     }
 
-    window.setTimeout(() => setPicked(null), 700);
+    const next = [...flipped, card.uid];
+    setFlipped(next);
+
+    if (next.length !== 2) return;
+
+    setMoves((value) => value + 1);
+    const first = deck.find((item) => item.uid === next[0]);
+    const second = deck.find((item) => item.uid === next[1]);
+
+    if (first && second && first.pairId === second.pairId && first.kind !== second.kind) {
+      setLocked(true);
+      window.setTimeout(() => {
+        setMatched((current) => {
+          const updated = [...current, first.pairId];
+          if (updated.length === pairs.length) {
+            window.setTimeout(() => setFinished(true), 550);
+          }
+          return updated;
+        });
+        setFlipped([]);
+        setLocked(false);
+      }, 450);
+      return;
+    }
+
+    setLocked(true);
+    window.setTimeout(() => {
+      setFlipped([]);
+      setLocked(false);
+    }, 900);
   };
+
+  const example = pairs[0];
+
+  if (!started) {
+    return (
+      <section className="visual-only-page">
+        <div className="memory-intro">
+          <div className="memory-intro-symbols" aria-hidden>
+            <span>🧠</span><span>＋</span><span>🤟</span><span>＋</span><span>⚗️</span>
+          </div>
+
+          <div className="memory-demo-pair">
+            <div className="memory-card memory-card-open demo-card" aria-hidden>
+              <div className="memory-card-face memory-card-front symbol-face">
+                <ChemistrySymbol id={example.id} />
+              </div>
+            </div>
+
+            <span className="memory-demo-link" aria-hidden>↔</span>
+
+            <div className="memory-card memory-card-open demo-card" aria-hidden>
+              <div className="memory-card-face memory-card-front sign-face">
+                <SignThumbnail pair={example} />
+              </div>
+            </div>
+          </div>
+
+          <div className="memory-intro-flow" aria-hidden>
+            <span>👆</span><span>→</span><span>👆</span><span>→</span><span>✅</span>
+          </div>
+
+          <button type="button" className="visual-only-start memory-start" onClick={reset} aria-label="Iniciar">
+            ▶
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  if (finished) {
+    return (
+      <section className="visual-only-page">
+        <div className="memory-finish">
+          <div className="memory-finish-icons" aria-hidden>
+            <span>🏆</span><span>🤟</span><span>⚛️</span>
+          </div>
+
+          <div className="memory-scoreboard" aria-hidden>
+            <span>✅ {matched.length}/{pairs.length}</span>
+            <span>🔄 {moves}</span>
+          </div>
+
+          <div className="memory-review-grid">
+            {pairs.map((pair) => (
+              <div key={pair.id} className="memory-review-card">
+                <div className="memory-review-symbol">
+                  <ChemistrySymbol id={pair.id} />
+                </div>
+                <div className="memory-review-video">
+                  <VerifiedLibrasVideo
+                    source={{ kind: 'drive', id: pair.driveId }}
+                    ariaLabel="Sinal em Libras"
+                    compact
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button type="button" className="visual-only-start memory-restart" onClick={reset} aria-label="Reiniciar">
+            ↻
+          </button>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="visual-only-page">
-      <div className="visual-round-indicator" aria-hidden>
-        {rounds.map((_, index) => (
-          <i
-            key={index}
-            className={
-              stage === 'finish' || index < roundIndex
-                ? 'done'
-                : stage === 'play' && index === roundIndex
-                  ? 'active'
-                  : ''
-            }
-          />
-        ))}
+      <div className="memory-status" aria-hidden>
+        <span>✅ {matched.length}/{pairs.length}</span>
+        <span>🔄 {moves}</span>
       </div>
 
-      <div className="visual-only-game-shell match-game">
-        {stage === 'tutorial' && (
-          <div className="visual-only-game-stage match-tutorial">
-            <div className="match-sign">
-              <VerifiedLibrasVideo source={BASE_SIGN} ariaLabel="Sinal em Libras" />
-            </div>
+      <div className="memory-board">
+        {deck.map((card) => {
+          const pair = pairs.find((item) => item.id === card.pairId)!;
+          const isMatched = matched.includes(card.pairId);
+          const isFlipped = flipped.includes(card.uid) || isMatched;
 
-            <div className="match-rule">
-              <div className="match-rule-hint" aria-hidden>
-                <span>🤟</span><span>＝</span><span className="base-zone">pH › 7</span>
-              </div>
-            </div>
+          return (
+            <button
+              key={card.uid}
+              type="button"
+              className={`memory-card ${isFlipped ? 'memory-card-open' : ''} ${isMatched ? 'memory-card-matched' : ''}`}
+              onClick={() => flipCard(card)}
+              disabled={locked && !isFlipped}
+              aria-label="Carta"
+            >
+              <span className="memory-card-inner">
+                <span className="memory-card-face memory-card-back" aria-hidden>
+                  <span className="memory-back-hand">🤟</span>
+                  <span className="memory-back-chem">⚗️</span>
+                </span>
 
-            <div className="match-demo" aria-hidden>
-              <div className="match-card">
-                <span className="match-card-icon">🍋</span>
-                <span className="match-card-ph">pH 2</span>
-                <MiniScale ph={2} />
-              </div>
+                <span className={`memory-card-face memory-card-front ${card.kind === 'symbol' ? 'symbol-face' : 'sign-face'}`}>
+                  {card.kind === 'symbol' ? (
+                    <ChemistrySymbol id={card.pairId} />
+                  ) : isMatched ? (
+                    <VerifiedLibrasVideo
+                      source={{ kind: 'drive', id: pair.driveId }}
+                      ariaLabel="Sinal em Libras"
+                      compact
+                    />
+                  ) : (
+                    <SignThumbnail pair={pair} />
+                  )}
 
-              <div className="match-card correct">
-                <span className="match-card-result">✓</span>
-                <span className="match-card-icon">🧼</span>
-                <span className="match-card-ph">pH 10</span>
-                <MiniScale ph={10} />
-              </div>
-
-              <div className="match-card">
-                <span className="match-card-icon">🍊</span>
-                <span className="match-card-ph">pH 3</span>
-                <MiniScale ph={3} />
-              </div>
-            </div>
-
-            <button type="button" className="visual-only-start" onClick={start} aria-label="Iniciar">
-              ▶
+                  {isMatched && <span className="memory-match-check" aria-hidden>✓</span>}
+                </span>
+              </span>
             </button>
-          </div>
-        )}
-
-        {stage === 'play' && (
-          <div className="visual-only-game-stage">
-            <div className="match-sign">
-              <VerifiedLibrasVideo source={BASE_SIGN} ariaLabel="Sinal em Libras" />
-            </div>
-
-            <div className="match-rule-hint" aria-hidden>
-              <span>👀</span><span>→</span><span>🎯</span>
-            </div>
-
-            <div className="match-cards">
-              {current.options.map((option, index) => {
-                const isPicked = picked === index;
-                const isCorrect = index === correctIndex;
-                const stateClass = isPicked ? (isCorrect ? 'correct' : 'wrong') : '';
-
-                return (
-                  <button
-                    key={`${roundIndex}-${index}`}
-                    type="button"
-                    className={`match-card ${stateClass}`}
-                    onClick={() => choose(index)}
-                    disabled={locked}
-                    aria-label={`pH ${option.ph}`}
-                  >
-                    {isPicked && (
-                      <span className="match-card-result" aria-hidden>
-                        {isCorrect ? '✓' : '✕'}
-                      </span>
-                    )}
-                    <span className="match-card-icon" aria-hidden>{option.icon}</span>
-                    <span className="match-card-ph">pH {option.ph}</span>
-                    <MiniScale ph={option.ph} />
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {stage === 'finish' && (
-          <div className="match-finish">
-            <div className="match-finish-icons" aria-hidden>
-              <span>🏆</span><span>🤟</span><span>👏</span>
-            </div>
-
-            <div className="visual-score" aria-label={`${score} de ${rounds.length}`}>
-              <span>{score}</span><span>/ {rounds.length}</span>
-            </div>
-
-            <div className="match-feedback-sign">
-              <VerifiedLibrasVideo source={BASE_SIGN} ariaLabel="Sinal em Libras" compact />
-            </div>
-
-            <button type="button" className="visual-only-start match-restart" onClick={start} aria-label="Reiniciar">
-              ↻
-            </button>
-          </div>
-        )}
+          );
+        })}
       </div>
     </section>
   );
