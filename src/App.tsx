@@ -2,6 +2,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { AppShell } from './layouts/AppShell';
 import { Home } from './pages/Home';
 import { LibrasHub } from './pages/LibrasHub';
+import { LibrasGame } from './pages/LibrasGame';
 import { Explore } from './pages/Explore';
 import { Detective } from './pages/Detective';
 import { Lab } from './pages/Lab';
@@ -18,6 +19,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Home /> },
       { path: 'libras', element: <LibrasHub /> },
+      { path: 'libras/jogo-ph', element: <LibrasGame /> },
       { path: 'explorar', element: <Explore /> },
       { path: 'detetive', element: <Detective /> },
       { path: 'laboratorio', element: <Lab /> },
