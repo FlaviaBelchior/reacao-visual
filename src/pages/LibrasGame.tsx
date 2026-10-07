@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { VerifiedLibrasVideo } from '../components/VerifiedLibrasVideo';
 import { sinquiStages, type SinquiTerm } from '../data/sinquiTerms';
 import '../styles/libras-only.css';
@@ -6,7 +6,7 @@ import '../styles/libras-only.css';
 type Mode = 'map' | 'play' | 'review';
 
 function Visual({ id }: { id: string }) {
-  const notation = (html: React.ReactNode, cls='notation-choice') => <span className={`choice-visual ${cls}`}>{html}</span>;
+  const notation = (html: ReactNode, cls='notation-choice') => <span className={`choice-visual ${cls}`}>{html}</span>;
 
   switch (id) {
     case 'atom': return <span className="choice-visual emoji-choice">⚛️</span>;
