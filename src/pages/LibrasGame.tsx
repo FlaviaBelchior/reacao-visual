@@ -1,19 +1,13 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { VerifiedLibrasVideo } from '../components/VerifiedLibrasVideo';
 import '../styles/libras-only.css';
 
-type Pair = {
-  id: string;
+type Concept = {
+  id: 'atom' | 'electron' | 'proton' | 'molecule' | 'reaction' | 'element';
   driveId: string;
 };
 
-type MemoryCard = {
-  uid: string;
-  pairId: string;
-  kind: 'symbol' | 'sign';
-};
-
-const pairs: Pair[] = [
+const concepts: Concept[] = [
   { id: 'atom', driveId: '1dr0kmFi0ukBUnirW8imVSo7RMPkJMmXs' },
   { id: 'electron', driveId: '1xjVra4cg-q8uOCguIS3al6aLio7XdBHv' },
   { id: 'proton', driveId: '1HUdjZ39lYCFQozl7q2WLh4b3Vk3NCcWp' },
@@ -22,144 +16,114 @@ const pairs: Pair[] = [
   { id: 'element', driveId: '1XNtY-C0UwpUDMX8pqvyY1XhZnxXZ0Dh0' },
 ];
 
-function createDeck(): MemoryCard[] {
-  return pairs
-    .flatMap((pair) => [
-      { uid: `${pair.id}-symbol`, pairId: pair.id, kind: 'symbol' as const },
-      { uid: `${pair.id}-sign`, pairId: pair.id, kind: 'sign' as const },
-    ])
-    .sort(() => Math.random() - 0.5);
-}
+const rounds: Array<{ answer: Concept['id']; options: Concept['id'][] }> = [
+  { answer: 'atom', options: ['atom', 'molecule', 'element'] },
+  { answer: 'electron', options: ['proton', 'electron', 'atom'] },
+  { answer: 'proton', options: ['electron', 'element', 'proton'] },
+  { answer: 'molecule', options: ['molecule', 'atom', 'reaction'] },
+  { answer: 'reaction', options: ['element', 'reaction', 'molecule'] },
+  { answer: 'element', options: ['atom', 'proton', 'element'] },
+];
 
-function ChemistrySymbol({ id }: { id: string }) {
-  if (id === 'atom') return <span className="memory-symbol emoji-symbol">⚛️</span>;
-  if (id === 'electron') return <span className="memory-symbol chem-notation">e<sup>−</sup></span>;
-  if (id === 'proton') return <span className="memory-symbol chem-notation">p<sup>+</sup></span>;
-  if (id === 'molecule') return <span className="memory-symbol chem-notation molecule-symbol">H<sub>2</sub>O</span>;
+function ChemistryVisual({ id }: { id: Concept['id'] }) {
+  if (id === 'atom') return <span className="choice-visual emoji-choice">⚛️</span>;
+  if (id === 'electron') return <span className="choice-visual notation-choice">e<sup>−</sup></span>;
+  if (id === 'proton') return <span className="choice-visual notation-choice">p<sup>+</sup></span>;
+  if (id === 'molecule') return <span className="choice-visual notation-choice molecule-choice">H<sub>2</sub>O</span>;
   if (id === 'reaction') {
     return (
-      <span className="memory-symbol reaction-symbol" aria-hidden>
-        <span>●</span><span>＋</span><span>▲</span><span>→</span><span>●▲</span>
+      <span className="choice-visual reaction-choice" aria-hidden>
+        <span className="particle-blue">●</span>
+        <span>＋</span>
+        <span className="particle-red">▲</span>
+        <span>→</span>
+        <span className="particle-mix">●▲</span>
       </span>
     );
   }
+
   return (
-    <span className="memory-periodic-tile" aria-hidden>
+    <span className="choice-periodic" aria-hidden>
       <small>26</small>
       <strong>Fe</strong>
     </span>
   );
 }
 
-function SignThumbnail({ pair }: { pair: Pair }) {
-  return (
-    <div className="memory-sign-thumb" aria-hidden>
-      <span className="memory-sign-fallback">🤟</span>
-      <img
-        src={`https://drive.google.com/thumbnail?id=${pair.driveId}&sz=w1000`}
-        alt=""
-        draggable={false}
-        onError={(event) => {
-          event.currentTarget.style.opacity = '0';
-        }}
-      />
-      <span className="memory-hand-badge">🤟</span>
-    </div>
-  );
-}
-
 export function LibrasGame() {
   const [started, setStarted] = useState(false);
-  const [deck, setDeck] = useState<MemoryCard[]>(() => createDeck());
-  const [flipped, setFlipped] = useState<string[]>([]);
-  const [matched, setMatched] = useState<string[]>([]);
-  const [moves, setMoves] = useState(0);
-  const [locked, setLocked] = useState(false);
+  const [roundIndex, setRoundIndex] = useState(0);
+  const [wrongPick, setWrongPick] = useState<Concept['id'] | null>(null);
+  const [correctPick, setCorrectPick] = useState<Concept['id'] | null>(null);
+  const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
 
-  const reset = () => {
-    setDeck(createDeck());
-    setFlipped([]);
-    setMatched([]);
-    setMoves(0);
-    setLocked(false);
-    setFinished(false);
+  const current = rounds[roundIndex];
+  const sign = useMemo(
+    () => concepts.find((concept) => concept.id === current.answer)!,
+    [current],
+  );
+
+  const start = () => {
     setStarted(true);
+    setRoundIndex(0);
+    setWrongPick(null);
+    setCorrectPick(null);
+    setScore(0);
+    setFinished(false);
   };
 
-  const flipCard = (card: MemoryCard) => {
-    if (
-      locked ||
-      matched.includes(card.pairId) ||
-      flipped.includes(card.uid) ||
-      flipped.length >= 2
-    ) {
+  const choose = (id: Concept['id']) => {
+    if (correctPick) return;
+
+    if (id !== current.answer) {
+      setWrongPick(id);
+      window.setTimeout(() => setWrongPick(null), 650);
       return;
     }
 
-    const next = [...flipped, card.uid];
-    setFlipped(next);
+    setCorrectPick(id);
+    setScore((value) => value + 1);
 
-    if (next.length !== 2) return;
-
-    setMoves((value) => value + 1);
-    const first = deck.find((item) => item.uid === next[0]);
-    const second = deck.find((item) => item.uid === next[1]);
-
-    if (first && second && first.pairId === second.pairId && first.kind !== second.kind) {
-      setLocked(true);
-      window.setTimeout(() => {
-        setMatched((current) => {
-          const updated = [...current, first.pairId];
-          if (updated.length === pairs.length) {
-            window.setTimeout(() => setFinished(true), 550);
-          }
-          return updated;
-        });
-        setFlipped([]);
-        setLocked(false);
-      }, 450);
-      return;
-    }
-
-    setLocked(true);
     window.setTimeout(() => {
-      setFlipped([]);
-      setLocked(false);
-    }, 900);
-  };
+      if (roundIndex === rounds.length - 1) {
+        setFinished(true);
+        return;
+      }
 
-  const example = pairs[0];
+      setRoundIndex((value) => value + 1);
+      setWrongPick(null);
+      setCorrectPick(null);
+    }, 850);
+  };
 
   if (!started) {
+    const demo = concepts[0];
+
     return (
       <section className="visual-only-page">
-        <div className="memory-intro">
-          <div className="memory-intro-symbols" aria-hidden>
-            <span>🧠</span><span>＋</span><span>🤟</span><span>＋</span><span>⚗️</span>
+        <div className="choice-game-intro">
+          <div className="choice-game-intro-icons" aria-hidden>
+            <span>🤟</span><span>↓</span><span>👆</span><span>✅</span>
           </div>
 
-          <div className="memory-demo-pair">
-            <div className="memory-card memory-card-open demo-card" aria-hidden>
-              <div className="memory-card-face memory-card-front symbol-face">
-                <ChemistrySymbol id={example.id} />
-              </div>
+          <div className="choice-sign-stage">
+            <VerifiedLibrasVideo
+              source={{ kind: 'drive', id: demo.driveId }}
+              ariaLabel="Sinal em Libras"
+            />
+          </div>
+
+          <div className="choice-intro-options" aria-hidden>
+            <div className="choice-option demo-correct">
+              <ChemistryVisual id="atom" />
+              <span className="choice-feedback">✓</span>
             </div>
-
-            <span className="memory-demo-link" aria-hidden>↔</span>
-
-            <div className="memory-card memory-card-open demo-card" aria-hidden>
-              <div className="memory-card-face memory-card-front sign-face">
-                <SignThumbnail pair={example} />
-              </div>
-            </div>
+            <div className="choice-option"><ChemistryVisual id="molecule" /></div>
+            <div className="choice-option"><ChemistryVisual id="element" /></div>
           </div>
 
-          <div className="memory-intro-flow" aria-hidden>
-            <span>👆</span><span>→</span><span>👆</span><span>→</span><span>✅</span>
-          </div>
-
-          <button type="button" className="visual-only-start memory-start" onClick={reset} aria-label="Iniciar">
+          <button type="button" className="visual-only-start choice-start" onClick={start} aria-label="Iniciar">
             ▶
           </button>
         </div>
@@ -170,34 +134,34 @@ export function LibrasGame() {
   if (finished) {
     return (
       <section className="visual-only-page">
-        <div className="memory-finish">
-          <div className="memory-finish-icons" aria-hidden>
-            <span>🏆</span><span>🤟</span><span>⚛️</span>
+        <div className="choice-finish">
+          <div className="choice-finish-icons" aria-hidden>
+            <span>🏆</span><span>🤟</span><span>⚗️</span>
           </div>
 
-          <div className="memory-scoreboard" aria-hidden>
-            <span>✅ {matched.length}/{pairs.length}</span>
-            <span>🔄 {moves}</span>
+          <div className="choice-finish-score" aria-hidden>
+            <span>✅</span>
+            <strong>{score}/{rounds.length}</strong>
           </div>
 
-          <div className="memory-review-grid">
-            {pairs.map((pair) => (
-              <div key={pair.id} className="memory-review-card">
-                <div className="memory-review-symbol">
-                  <ChemistrySymbol id={pair.id} />
-                </div>
-                <div className="memory-review-video">
+          <div className="choice-review">
+            {concepts.map((concept) => (
+              <div className="choice-review-item" key={concept.id}>
+                <div className="choice-review-sign">
                   <VerifiedLibrasVideo
-                    source={{ kind: 'drive', id: pair.driveId }}
+                    source={{ kind: 'drive', id: concept.driveId }}
                     ariaLabel="Sinal em Libras"
                     compact
                   />
+                </div>
+                <div className="choice-review-symbol">
+                  <ChemistryVisual id={concept.id} />
                 </div>
               </div>
             ))}
           </div>
 
-          <button type="button" className="visual-only-start memory-restart" onClick={reset} aria-label="Reiniciar">
+          <button type="button" className="visual-only-start choice-start" onClick={start} aria-label="Reiniciar">
             ↻
           </button>
         </div>
@@ -207,51 +171,55 @@ export function LibrasGame() {
 
   return (
     <section className="visual-only-page">
-      <div className="memory-status" aria-hidden>
-        <span>✅ {matched.length}/{pairs.length}</span>
-        <span>🔄 {moves}</span>
+      <div className="choice-progress" aria-hidden>
+        {rounds.map((_, index) => (
+          <i
+            key={index}
+            className={
+              index < roundIndex
+                ? 'done'
+                : index === roundIndex
+                  ? 'active'
+                  : ''
+            }
+          />
+        ))}
       </div>
 
-      <div className="memory-board">
-        {deck.map((card) => {
-          const pair = pairs.find((item) => item.id === card.pairId)!;
-          const isMatched = matched.includes(card.pairId);
-          const isFlipped = flipped.includes(card.uid) || isMatched;
+      <div className="choice-game">
+        <div className="choice-sign-stage">
+          <VerifiedLibrasVideo
+            source={{ kind: 'drive', id: sign.driveId }}
+            ariaLabel="Sinal em Libras"
+          />
+        </div>
 
-          return (
-            <button
-              key={card.uid}
-              type="button"
-              className={`memory-card ${isFlipped ? 'memory-card-open' : ''} ${isMatched ? 'memory-card-matched' : ''}`}
-              onClick={() => flipCard(card)}
-              disabled={locked && !isFlipped}
-              aria-label="Carta"
-            >
-              <span className="memory-card-inner">
-                <span className="memory-card-face memory-card-back" aria-hidden>
-                  <span className="memory-back-hand">🤟</span>
-                  <span className="memory-back-chem">⚗️</span>
-                </span>
+        <div className="choice-down-arrow" aria-hidden>↓</div>
 
-                <span className={`memory-card-face memory-card-front ${card.kind === 'symbol' ? 'symbol-face' : 'sign-face'}`}>
-                  {card.kind === 'symbol' ? (
-                    <ChemistrySymbol id={card.pairId} />
-                  ) : isMatched ? (
-                    <VerifiedLibrasVideo
-                      source={{ kind: 'drive', id: pair.driveId }}
-                      ariaLabel="Sinal em Libras"
-                      compact
-                    />
-                  ) : (
-                    <SignThumbnail pair={pair} />
-                  )}
+        <div className="choice-grid">
+          {current.options.map((id) => {
+            const isWrong = wrongPick === id;
+            const isCorrect = correctPick === id;
 
-                  {isMatched && <span className="memory-match-check" aria-hidden>✓</span>}
-                </span>
-              </span>
-            </button>
-          );
-        })}
+            return (
+              <button
+                key={id}
+                type="button"
+                className={`choice-option ${isWrong ? 'wrong' : ''} ${isCorrect ? 'correct' : ''}`}
+                onClick={() => choose(id)}
+                disabled={Boolean(correctPick)}
+                aria-label="Opção"
+              >
+                <ChemistryVisual id={id} />
+                {(isWrong || isCorrect) && (
+                  <span className="choice-feedback" aria-hidden>
+                    {isCorrect ? '✓' : '✕'}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </section>
   );
