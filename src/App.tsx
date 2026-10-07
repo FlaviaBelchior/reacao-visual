@@ -11,8 +11,9 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Home /> },
       { path: 'libras', element: <LibrasHub /> },
-      { path: 'libras/memoria-quimica', element: <LibrasGame /> },
-      { path: 'libras/jogo-ph', element: <Navigate to="/libras/memoria-quimica" replace /> },
+      { path: 'libras/desafio-visual', element: <LibrasGame /> },
+      { path: 'libras/memoria-quimica', element: <Navigate to="/libras/desafio-visual" replace /> },
+      { path: 'libras/jogo-ph', element: <Navigate to="/libras/desafio-visual" replace /> },
       { path: '*', element: <Navigate to="/libras" replace /> },
     ],
   },
